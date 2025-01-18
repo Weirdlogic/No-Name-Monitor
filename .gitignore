@@ -1,3 +1,7 @@
 ddosia-monitor/node_modules
 /node_modules
 node_modules
+/Files
+Files
+.vscode
+/.vscode
