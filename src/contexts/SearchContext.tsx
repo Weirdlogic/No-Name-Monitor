@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback, ReactNode } 
 import { TargetConfig } from '../types';
 
 // Search State Types
-interface SearchFilters {
+export interface SearchFilters {
   tld: string[];
   methods: string[];
   protocols: string[];
