@@ -36,41 +36,49 @@ export const SearchResults = ({ results, onTargetSelect }: SearchResultsProps) =
 
     results.forEach(target => {
       let key: string;
-      let description: string;
+      let baseDescription: string;
 
       switch (groupBy) {
         case 'tld':
           key = target.host.split('.').slice(-1)[0];
-          description = `.${key} domains`;
+          baseDescription = `.${key} domains`;
           break;
         case 'method':
           key = target.method;
-          description = `${key} requests`;
+          baseDescription = `${key} requests`;
           break;
         case 'protocol':
           key = target.type;
-          description = `${key} protocol`;
+          baseDescription = `${key} protocol`;
           break;
         case 'port':
           key = target.port.toString();
-          description = `Port ${key}`;
+          baseDescription = `Port ${key}`;
           break;
         default:
           key = 'default';
-          description = 'All targets';
+          baseDescription = 'All targets';
       }
 
       if (!groups.has(key)) {
         groups.set(key, []);
       }
-      groups.get(key)?.push(target);
+      const groupTargets = groups.get(key);
+      if (groupTargets) {
+        groupTargets.push(target);
+      }
     });
 
     return Array.from(groups.entries())
       .map(([key, targets]) => ({
         key,
         targets,
-        description: `${targets.length} targets using ${description}`
+        description: `${targets.length} targets using ${
+          groupBy === 'tld' ? `.${key} domains` :
+          groupBy === 'method' ? `${key} requests` :
+          groupBy === 'protocol' ? `${key} protocol` :
+          groupBy === 'port' ? `Port ${key}` : 'default'
+        }`
       }))
       .sort((a, b) => b.targets.length - a.targets.length);
   }, [results, groupBy]);

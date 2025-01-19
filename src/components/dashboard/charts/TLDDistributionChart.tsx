@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { TLDStats } from '../../../types/statistics';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { CategoricalChartState } from 'recharts/types/chart/types';
 
 interface TLDDistributionChartProps {
   data: TLDStats[];
@@ -24,22 +25,34 @@ export const TLDDistributionChart = ({ data, onTLDSelect }: TLDDistributionChart
   const [showDetails, setShowDetails] = useState(false);
 
   const processedData = useMemo(() => {
-  return data
-    .map(item => ({
-      tld: item.tld,
-      targets: item.count,  // we keep this as targets in the object
-      uniqueIPs: item.uniqueIPs,
-      percentage: item.percentage,
-      methodCount: item.attackMethods.size,
-      hostCount: item.hosts.size
-    }))
-    .sort((a, b) => {
-      // Fix sorting by mapping count to targets
-      const key = sortBy === 'count' ? 'targets' : sortBy;
-      return b[key] - a[key];
-    })
-    .slice(0, showTop);
-}, [data, sortBy, showTop]);
+    return data
+      .map(item => ({
+        tld: item.tld,
+        targets: item.count, // we keep this as targets in the object
+        uniqueIPs: item.uniqueIPs,
+        percentage: item.percentage,
+        methodCount: item.attackMethods.size,
+        hostCount: item.hosts.size
+      }))
+      .sort((a, b) => {
+        const key = sortBy === 'count' ? 'targets' : sortBy;
+        return b[key] - a[key];
+      })
+      .slice(0, showTop);
+  }, [data, sortBy, showTop]);
+
+  // Define handleBarClick here
+  const handleBarClick = (data: CategoricalChartState) => {
+    if (data.activePayload?.[0]?.payload?.tld && onTLDSelect) {
+      onTLDSelect(data.activePayload[0].payload.tld);
+    }
+  };
+
+  const handleItemClick = (tld: { tld: string }) => {
+    if (onTLDSelect) {
+      onTLDSelect(tld.tld);
+    }
+  };
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -123,7 +136,7 @@ export const TLDDistributionChart = ({ data, onTLDSelect }: TLDDistributionChart
               <div 
                 key={tld.tld}
                 className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-                onClick={() => handleBarClick(tld)}
+                onClick={() => handleItemClick(tld)}
               >
                 <h4 className="font-medium">{tld.tld}</h4>
                 <div className="text-sm text-gray-600 space-y-1">

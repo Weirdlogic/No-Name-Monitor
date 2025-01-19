@@ -15,6 +15,12 @@ interface SearchFilters {
     end: Date;
   };
 }
+type UpdateFilterValue = 
+  | { type: 'array'; key: 'tld' | 'methods' | 'protocols'; value: string }
+  | { type: 'array'; key: 'ports'; value: number }
+  | { type: 'single'; key: 'useSSL'; value: boolean | undefined }
+  | { type: 'single'; key: 'dateRange'; value: { start: Date; end: Date } | undefined };
+
 
 interface SavedSearch {
   id: string;
@@ -99,17 +105,17 @@ export const AdvancedSearch = () => {
     });
   }, [allTargets, query, filters]);
 
-  // Update filters
-  const updateFilter = useCallback((key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: Array.isArray(prev[key])
-        ? prev[key].includes(value)
-          ? prev[key].filter(v => v !== value)
-          : [...prev[key], value]
-        : value
-    }));
-  }, []);
+// Update the filter handler
+const updateFilter = useCallback((update: UpdateFilterValue) => {
+  setFilters(prev => ({
+    ...prev,
+    [update.key]: update.type === 'array'
+      ? (prev[update.key] as any[]).includes(update.value)
+        ? (prev[update.key] as any[]).filter(v => v !== update.value)
+        : [...(prev[update.key] as any[]), update.value]
+      : update.value
+  }));
+}, []);
 
   // Save search
   const saveSearch = useCallback(() => {
@@ -170,7 +176,7 @@ export const AdvancedSearch = () => {
                     <input
                       type="checkbox"
                       checked={filters.tld.includes(tld)}
-                      onChange={() => updateFilter('tld', tld)}
+                      onChange={() => updateFilter({ type: 'array', key: 'tld', value: tld })}
                       className="rounded text-blue-500"
                     />
                     <span className="text-sm">.{tld}</span>
@@ -188,7 +194,7 @@ export const AdvancedSearch = () => {
                     <input
                       type="checkbox"
                       checked={filters.methods.includes(method)}
-                      onChange={() => updateFilter('methods', method)}
+                      onChange={() => updateFilter({ type: 'array', key: 'methods', value: method })}
                       className="rounded text-blue-500"
                     />
                     <span className="text-sm">{method}</span>
@@ -206,7 +212,7 @@ export const AdvancedSearch = () => {
                     <input
                       type="checkbox"
                       checked={filters.protocols.includes(protocol)}
-                      onChange={() => updateFilter('protocols', protocol)}
+                      onChange={() => updateFilter({ type: 'array', key: 'protocols', value: protocol })}
                       className="rounded text-blue-500"
                     />
                     <span className="text-sm">{protocol}</span>
@@ -221,7 +227,11 @@ export const AdvancedSearch = () => {
               <div className="space-y-2">
                 <select
                   value={filters.useSSL === undefined ? '' : filters.useSSL.toString()}
-                  onChange={(e) => updateFilter('useSSL', e.target.value === '' ? undefined : e.target.value === 'true')}
+                  onChange={(e) => updateFilter({
+                    type: 'single',
+                    key: 'useSSL',
+                    value: e.target.value === '' ? undefined : e.target.value === 'true'
+                  })}
                   className="w-full rounded-md border p-1"
                 >
                   <option value="">Any SSL</option>
@@ -233,17 +243,25 @@ export const AdvancedSearch = () => {
                 <div className="space-y-1">
                   <input
                     type="date"
-                    onChange={(e) => updateFilter('dateRange', {
-                      ...filters.dateRange,
-                      start: e.target.valueAsDate
+                    onChange={(e) => updateFilter({
+                      type: 'single',
+                      key: 'dateRange',
+                      value: e.target.valueAsDate ? {
+                        start: e.target.valueAsDate,
+                        end: filters.dateRange?.end ?? e.target.valueAsDate
+                      } : undefined
                     })}
                     className="w-full rounded-md border p-1"
                   />
                   <input
                     type="date"
-                    onChange={(e) => updateFilter('dateRange', {
-                      ...filters.dateRange,
-                      end: e.target.valueAsDate
+                    onChange={(e) => updateFilter({
+                      type: 'single',
+                      key: 'dateRange',
+                      value: e.target.valueAsDate ? {
+                        start: filters.dateRange?.start ?? e.target.valueAsDate,
+                        end: e.target.valueAsDate
+                      } : undefined
                     })}
                     className="w-full rounded-md border p-1"
                   />

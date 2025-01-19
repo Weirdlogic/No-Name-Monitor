@@ -136,3 +136,41 @@ export interface TrendAnalysis {
     value: number;
   }[];
 }
+
+export interface TLDStats {
+  tld: string;
+  count: number;
+  percentage: number;
+  hosts: Set<string>;
+  uniqueIPs: number;
+  attackMethods: Set<string>;
+}
+
+export interface MethodStats {
+  method: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TrendData {
+  previousValue: number;
+  percentage: number;
+}
+
+export interface Statistics {
+  totalTargets: number;
+  activeHosts: number;
+  totalTLDs: number;
+  tldDistribution: Map<string, number>;
+  methodDistribution: MethodStats[];
+}
+
+export interface StatisticsHookReturn {
+  totalTargets: number;
+  activeHosts: number;
+  tldDistribution: Map<string, number>;
+  methodDistribution: MethodStats[];
+  loading: boolean;
+  error: Error | null;
+  getTrend: (metric: keyof Statistics) => TrendData | undefined;
+}

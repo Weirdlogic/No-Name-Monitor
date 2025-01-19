@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import StatisticsService from '../services/StatisticsService';
 import { MethodStats, ProtocolStats, TLDStats } from '../types/statistics';
 
+// Types
+export interface TrendData {
+  previousValue: number;
+  percentage: number;
+}
+
 interface Statistics {
   totalTargets: number;
   activeHosts: number;
@@ -10,6 +16,12 @@ interface Statistics {
   protocolDistribution: ProtocolStats[];
   tldStats: TLDStats[];
   lastUpdate: Date | null;
+}
+
+export interface StatisticsData extends Statistics {
+  loading: boolean;
+  error: Error | null;
+  getTrend: (metric: keyof Pick<Statistics, 'totalTargets' | 'activeHosts'>) => TrendData | null;
 }
 
 export const useStatistics = () => {
@@ -23,6 +35,7 @@ export const useStatistics = () => {
     lastUpdate: null
   });
 
+  const [previousStats, setPreviousStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -30,6 +43,7 @@ export const useStatistics = () => {
     const fetchStatistics = async () => {
       try {
         const snapshot = await StatisticsService.getStatistics();
+        setPreviousStats(stats);
         setStats({
           totalTargets: snapshot.totalTargets,
           activeHosts: snapshot.uniqueHosts,
@@ -49,18 +63,29 @@ export const useStatistics = () => {
     };
 
     fetchStatistics();
-
     // Poll for updates every 5 minutes
     const intervalId = setInterval(fetchStatistics, 5 * 60 * 1000);
-
     return () => clearInterval(intervalId);
   }, []);
 
-  // Get trend for a specific metric
-  const getTrend = (metric: keyof Statistics): number | null => {
-    // Implementation for trend calculation
-    // Will be added in next iteration
-    return null;
+  const getTrend = (metric: keyof Pick<Statistics, 'totalTargets' | 'activeHosts'>): TrendData | null => {
+    if (!previousStats) return null;
+
+    const currentValue = stats[metric];
+    const previousValue = previousStats[metric];
+
+    if (typeof currentValue !== 'number' || typeof previousValue !== 'number') {
+      return null;
+    }
+
+    const percentage = previousValue !== 0
+      ? ((currentValue - previousValue) / previousValue) * 100
+      : 0;
+
+    return {
+      previousValue,
+      percentage: Number(percentage.toFixed(1))
+    };
   };
 
   return {

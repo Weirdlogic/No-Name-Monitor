@@ -1,22 +1,25 @@
 // src/components/dashboard/AlertPanel.tsx
 import React, { useEffect, useState } from 'react';
 import { Card } from '../ui/Card';
-import { AlertTriangle, ArrowUp, Shield, Target } from 'lucide-react';
+import { AlertTriangle, ArrowUp, Info, Shield, Target } from 'lucide-react';
 import { Alert, AlertCategory, AlertSeverity } from '../../types/alerts';
 import AlertService from '../../services/AlertService';
+import { LucideIcon } from 'lucide-react';  // Add this import
 
-const severityIcons = {
+const severityIcons: Record<AlertSeverity, LucideIcon> = {
   [AlertSeverity.CRITICAL]: AlertTriangle,
   [AlertSeverity.HIGH]: ArrowUp,
   [AlertSeverity.MEDIUM]: Target,
-  [AlertSeverity.LOW]: Shield
+  [AlertSeverity.LOW]: Shield,
+  [AlertSeverity.INFO]: Info
 };
 
-const severityColors = {
+const severityColors: Record<AlertSeverity, string> = {
   [AlertSeverity.CRITICAL]: 'text-red-500',
   [AlertSeverity.HIGH]: 'text-orange-500',
   [AlertSeverity.MEDIUM]: 'text-yellow-500',
-  [AlertSeverity.LOW]: 'text-blue-500'
+  [AlertSeverity.LOW]: 'text-blue-500',
+  [AlertSeverity.INFO]: 'text-gray-500'
 };
 
 interface AlertCardProps {
